@@ -1,101 +1,169 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Menu from "@/components/menu";
+import React, { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, Image as ImageIcon, RefreshCw } from "lucide-react";
+
+const MenuGenerator = () => {
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [menuData, setMenuData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileUpload = (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile && selectedFile.type.substr(0, 5) === "image") {
+      setFile(selectedFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(selectedFile);
+      setError(null);
+    } else {
+      setFile(null);
+      setPreview(null);
+      setError("Please select a valid image file.");
+    }
+  };
+
+  const processMenu = async () => {
+    if (!file) return;
+
+    setIsLoading(true);
+    setError(null);
+    const formData = new FormData();
+    formData.append("menuImage", file);
+
+    try {
+      const response = await fetch("/api/process-menu", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to process menu");
+      }
+
+      const data = await response.json();
+      const transformedData = {
+        name: data.menu.name,
+        restaurant: data.menu.restaurant,
+        sections: data.menu.sections.map((section) => ({
+          name: section.name,
+          items: section.items.map((item) => ({
+            name: item.name,
+            price: item.price,
+            image:
+              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtEY1E5uyX1bU9au2oF74LoFPdthQlmZ5YIQ&s",
+          })),
+        })),
+        contact: data.menu.contact,
+      };
+      setMenuData(transformedData);
+    } catch (error) {
+      console.error("Error processing menu:", error);
+      setError("Failed to process the menu. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-4xl mx-auto"
+      >
+        <h1 className="text-4xl font-bold mb-8 text-center text-orange-500">
+          AI Menu Generator
+        </h1>
+        <div className="bg-gray-800 rounded-xl p-8 shadow-lg">
+          <div className="mb-8">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative overflow-hidden"
+            >
+              <input
+                type="file"
+                onChange={handleFileUpload}
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+              />
+              <button
+                onClick={() => fileInputRef.current.click()}
+                className="w-full bg-orange-500 text-white px-6 py-4 rounded-lg font-semibold flex items-center justify-center"
+              >
+                <Upload className="mr-2" />
+                Upload Menu Image
+              </button>
+            </motion.div>
+            <AnimatePresence>
+              {preview && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-4"
+                >
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="max-w-full h-auto rounded-lg"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {error && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-500 mt-2"
+              >
+                {error}
+              </motion.p>
+            )}
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={processMenu}
+            className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold flex items-center justify-center"
+            disabled={isLoading || !file}
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {isLoading ? (
+              <RefreshCw className="mr-2 animate-spin" />
+            ) : (
+              <ImageIcon className="mr-2" />
+            )}
+            {isLoading ? "Processing..." : "Generate Menu"}
+          </motion.button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </motion.div>
+
+      <AnimatePresence>
+        {menuData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5 }}
+            className="mt-12"
+          >
+            <Menu initialMenuData={menuData} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-}
+};
+
+export default MenuGenerator;
