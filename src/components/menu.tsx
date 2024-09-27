@@ -23,75 +23,6 @@ interface MenuData {
   };
 }
 
-const initialMenuData: MenuData = {
-  name: "FOOD MENU",
-  restaurant: "Paucek and Lage Restaurant",
-  sections: [
-    {
-      name: "MAIN COURSE",
-      items: [
-        {
-          name: "Cheeseburger",
-          price: "$34",
-          image: "/api/placeholder/200/200",
-        },
-        {
-          name: "Cheese sandwich",
-          price: "$22",
-          image: "/api/placeholder/200/200",
-        },
-        {
-          name: "Chicken burgers",
-          price: "$23",
-          image: "/api/placeholder/200/200",
-        },
-        {
-          name: "Spicy chicken",
-          price: "$33",
-          image: "/api/placeholder/200/200",
-        },
-        { name: "Hot dog", price: "$24", image: "/api/placeholder/200/200" },
-      ],
-    },
-    {
-      name: "APPETIZERS",
-      items: [
-        {
-          name: "Fruit Salad",
-          price: "$13",
-          image: "/api/placeholder/200/200",
-        },
-        { name: "Cocktails", price: "$12", image: "/api/placeholder/200/200" },
-        { name: "Nuggets", price: "$14", image: "/api/placeholder/200/200" },
-        { name: "Sandwich", price: "$13", image: "/api/placeholder/200/200" },
-        {
-          name: "French Fries",
-          price: "$15",
-          image: "/api/placeholder/200/200",
-        },
-      ],
-    },
-    {
-      name: "BEVERAGES",
-      items: [
-        { name: "Milk Shake", price: "$3", image: "/api/placeholder/200/200" },
-        { name: "Iced Tea", price: "$2", image: "/api/placeholder/200/200" },
-        {
-          name: "Orange Juice",
-          price: "$4",
-          image: "/api/placeholder/200/200",
-        },
-        { name: "Lemon Tea", price: "$3", image: "/api/placeholder/200/200" },
-        { name: "Coffee", price: "$5", image: "/api/placeholder/200/200" },
-      ],
-    },
-  ],
-  contact: {
-    phone: "123-456-7890",
-    address: "123 Anywhere St., Any City",
-  },
-};
-
 const EditableText: React.FC<{
   text: string;
   onSave: (newText: string) => void;
@@ -171,7 +102,12 @@ const MenuItem: React.FC<{
 }> = ({ item, onUpdate }) => {
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
-      <EditableImage src={item.image} alt={item.name} />
+      <EditableImage
+        src={
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtEY1E5uyX1bU9au2oF74LoFPdthQlmZ5YIQ&s"
+        }
+        alt={item.name}
+      />
       <div className="p-4">
         <h4 className="text-xl font-semibold mb-2">
           <EditableText

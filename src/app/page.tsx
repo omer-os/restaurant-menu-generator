@@ -5,10 +5,27 @@ import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Image as ImageIcon, RefreshCw } from "lucide-react";
 
+interface FoodMenu {
+  name: string;
+  restaurant: string;
+  sections: {
+    name: string;
+    items: {
+      name: string;
+      price: string;
+      image: string;
+    }[];
+  }[];
+  contact: {
+    phone: string;
+    address: string;
+  };
+}
+
 const MenuGenerator = () => {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [menuData, setMenuData] = useState(null);
+  const [menuData, setMenuData] = useState<FoodMenu | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
@@ -38,38 +55,14 @@ const MenuGenerator = () => {
     const formData = new FormData();
     formData.append("menuImage", file);
 
-    try {
-      const response = await fetch("/api/process-menu", {
-        method: "POST",
-        body: formData,
-      });
+    const response = await fetch("/api/process-menu", {
+      method: "POST",
+      body: formData,
+    });
 
-      if (!response.ok) {
-        throw new Error("Failed to process menu");
-      }
-
-      const data = await response.json();
-      const transformedData = {
-        name: data.menu.name,
-        restaurant: data.menu.restaurant,
-        sections: data.menu.sections.map((section) => ({
-          name: section.name,
-          items: section.items.map((item) => ({
-            name: item.name,
-            price: item.price,
-            image:
-              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtEY1E5uyX1bU9au2oF74LoFPdthQlmZ5YIQ&s",
-          })),
-        })),
-        contact: data.menu.contact,
-      };
-      setMenuData(transformedData);
-    } catch (error) {
-      console.error("Error processing menu:", error);
-      setError("Failed to process the menu. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    const data: FoodMenu = await response.json();
+    setMenuData(data);
+    setIsLoading(false);
   };
 
   return (
@@ -98,7 +91,7 @@ const MenuGenerator = () => {
                 ref={fileInputRef}
               />
               <button
-                onClick={() => fileInputRef.current.click()}
+                onClick={() => fileInputRef.current?.click()}
                 className="w-full bg-orange-500 text-white px-6 py-4 rounded-lg font-semibold flex items-center justify-center"
               >
                 <Upload className="mr-2" />
